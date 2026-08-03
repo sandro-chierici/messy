@@ -1,8 +1,7 @@
-﻿namespace DataService.Business.IO.DataView;
+﻿namespace DataService.Business.IO.DataCommand;
 
-public record TenantView
+public record TenantCommand
 {
-    public required string Id { get; init; }
     public string? Name { get; init; }
     public string? Description { get; init; }
     public DateTime? CreateDate { get; init; }

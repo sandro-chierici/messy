@@ -1,4 +1,5 @@
 ﻿using DataService.Business.IO;
+using DataService.Business.IO.DataView;
 using DataService.Business.Rules;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,13 +25,13 @@ public class TenantController(
         // Implement your logic to retrieve tenant information here
         QueryResult res = QueryResult.Create(
             totalCount: 1, 
-            new
+            new TenantView()
             {
-                Id = id,
+                Id = id!,
                 Name = "Sample Tenant",
                 Description = "This is a sample tenant description.",
-                CreatedDate = DateTime.UtcNow.AddMonths(-1),
-                UpdatedDate = DateTime.UtcNow
+                CreateDate = DateTime.UtcNow.AddMonths(-1),
+                UpdateDate = DateTime.UtcNow
             });
 
         return Ok(ApiV1Response.Read(res));
