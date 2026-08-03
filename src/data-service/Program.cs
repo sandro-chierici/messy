@@ -1,3 +1,4 @@
+using DataService.Adapters;
 using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,9 @@ if (builder.Environment.IsDevelopment())
            metrics.AddConsoleExporter();
        });
 }
+
+// Add My Services
+builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 
