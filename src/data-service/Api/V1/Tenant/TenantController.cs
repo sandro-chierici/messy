@@ -1,5 +1,6 @@
 ﻿using DataService.Business.IO;
 using DataService.Business.IO.DataView;
+using DataService.Business.Repository;
 using DataService.Business.Rules;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,34 +9,27 @@ namespace DataService.Api.V1.Tenant;
 [Route("api/v1/tenant")]
 [ApiController]
 public class TenantController(
-    InputValidator validator
+    InputValidator validator,
+    ITenantRepository tenantRepository
     ) : ControllerBase
 {
     private readonly InputValidator _inputValidator = validator;
+    private readonly ITenantRepository _tenantRepository = tenantRepository;
 
     [HttpGet]
     [Route("{tenantId}")]
-    public IActionResult GetTenant(string tenantId)
+    public async Task<IActionResult> GetTenant(string tenantId)
     {
         var id = _inputValidator.SanitizeId(tenantId);
 
         if (!id)
             return BadRequest(ApiV1Response.Failure(id.Error ?? "Invalid tenantId"));
 
-        // Implement your logic to retrieve tenant information here
-        QueryResult res = QueryResult.Create(
-            totalCount: 1, 
-            new TenantView()
-            {
-                Id = id!,
-                Name = "Sample Tenant",
-                Description = "This is a sample tenant description.",
-                CreateDate = DateTime.UtcNow.AddMonths(-1),
-                UpdateDate = DateTime.UtcNow
-            });
+        var res = await _tenantRepository.GetTenantByTenantIdAsync(id!);
+        if (!res)
+            return NotFound(ApiV1Response.Failure(res.Error ?? "TenantId not found"));
 
         return Ok(ApiV1Response.Read(res));
     }
-
 
 }
