@@ -12,7 +12,7 @@ namespace DataService.Adapters.Repository
     public class TenantRepository(IDbConnectionFactory dbConnectionFactory, EntityMapper entityMapper) : ITenantRepository
     {
         private readonly IDbConnectionFactory _dbConnectionFactory = dbConnectionFactory;
-        private readonly EntityMapper _entityMapper = entityMapper; 
+        private readonly EntityMapper _entityMapper = entityMapper;
 
         public Task<OkOrError<TenantView>> CreateTenantAsync(TenantCommand tenantCommand)
         {
@@ -34,25 +34,25 @@ namespace DataService.Adapters.Repository
             throw new NotImplementedException();
         }
 
-        public async Task<OkOrError<TenantView>> GetTenantByIdAsync(int tenantId)
+        public async Task<OkOrError<TenantView>> GetTenantByIdAsync(int id)
         {
             try
             {
                 using var conn = await _dbConnectionFactory.CreateConnectionAsync();
 
                 var tenant = await conn.QueryFirstOrDefaultAsync<Tenant>(
-                    "SELECT * FROM Tenants WHERE Id = @TenantId", 
-                    new { TenantId = tenantId });
+                    "SELECT * FROM Tenants WHERE Id = @Id",
+                    new { id });
 
-                if (tenant == null) 
+                if (tenant == null)
                     return new OkOrError<TenantView>(
                         Ok: false,
-                        Error: $"Tenant with ID {tenantId} not found."
+                        Error: $"Tenant with ID {id} not found."
                     );
 
                 var exts = await conn.QueryAsync<TenantExt>(
-                    "SELECT * FROM TenantExt WHERE TenantId = @TenantId AND IsDeleted = False", 
-                    new { TenantId = tenantId });
+                    "SELECT * FROM TenantExt WHERE TenantId = @TenantId AND IsDeleted = False",
+                    new { tenant.TenantId });
 
                 return new OkOrError<TenantView>(
                     Ok: true,
@@ -63,27 +63,41 @@ namespace DataService.Adapters.Repository
             {
                 return new OkOrError<TenantView>(
                     Ok: false,
-                    Error: $"An error occurred while retrieving the tenant with ID {tenantId}. Error: {ex.Message}");
+                    Error: $"An error occurred while retrieving the tenant with ID {id}. Error: {ex.Message}");
             }
         }
 
         public async Task<OkOrError<TenantView>> GetTenantByTenantIdAsync(string tenantId)
         {
-            var tenant = await _dbConnectionFactory.ExecuteAsync(i =>
+            try
             {
-                return i.QueryFirstOrDefaultAsync<Tenant>("SELECT * FROM Tenants WHERE TenantId = @TenantId", new { TenantId = tenantId });
-            });
+                using var conn = await _dbConnectionFactory.CreateConnectionAsync();
 
-            if (!tenant || tenant.Value == null)
+                var tenant = await conn.QueryFirstOrDefaultAsync<Tenant>(
+                    "SELECT * FROM Tenants WHERE Id = @Tenantd",
+                    new { TenantId = tenantId });
+
+                if (tenant == null)
+                    return new OkOrError<TenantView>(
+                        Ok: false,
+                        Error: $"Tenant with TenantId {tenantId} not found."
+                    );
+
+                var exts = await conn.QueryAsync<TenantExt>(
+                    "SELECT * FROM TenantExt WHERE TenantId = @TenantId AND IsDeleted = False",
+                    new { tenant.TenantId });
+
+                return new OkOrError<TenantView>(
+                    Ok: true,
+                    Value: _entityMapper.MapTenantViewFrom(tenant, exts)
+                    );
+            }
+            catch (Exception ex)
+            {
                 return new OkOrError<TenantView>(
                     Ok: false,
-                    Error: $"Tenant with TenantID {tenantId} not found. Error: {tenant.Error}");
-
-            var res = tenant.Value;
-            return new OkOrError<TenantView>(
-                Ok: true,
-                Value: _entityMapper.MapTenantViewFrom(res)
-                );
+                    Error: $"An error occurred while retrieving the tenant with TenantId {tenantId}. Error: {ex.Message}");
+            }
         }
 
         public Task<OkOrError<TenantView>> UpdateTenantByIdAsync(int id, TenantCommand tenantCommand)
