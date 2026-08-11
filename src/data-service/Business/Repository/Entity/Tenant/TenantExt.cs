@@ -3,7 +3,7 @@
 /// <summary>
 /// Customizzazioni della tabella Tenant per estendere le informazioni del tenant con campi aggiuntivi.
 /// </summary>
-public class TenantExt
+public class TenantExt : IEntity
 {
     /// <summary>
     /// Primary key

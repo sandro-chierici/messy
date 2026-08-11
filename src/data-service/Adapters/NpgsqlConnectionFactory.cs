@@ -38,7 +38,6 @@ public class NpgsqlConnectionFactory : IDbConnectionFactory
         {
             return new OkOrError<T>(false, Error: ex.Message);
         }
-        
     }
 }
 

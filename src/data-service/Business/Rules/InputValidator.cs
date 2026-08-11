@@ -12,7 +12,7 @@ public class InputValidator()
 {
     private const string SAFE_INPUT = @"\b(SELECT|FROM|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|EXEC|UNION|GRANT|REVOKE)\b";
 
-    public OkOrError<string?> SanitizeId(string? id, bool nullable = false, int maxLen = 30)
+    public OkOrError<string?> SanitizeId(string? id, bool nullable = false, int maxLen = 50)
     {
         if (id == null)
         {

@@ -20,12 +20,12 @@ public class TenantController(
     [Route("{tenantId}")]
     public async Task<IActionResult> GetTenant(string tenantId)
     {
-        var id = _inputValidator.SanitizeId(tenantId);
+        var safeId = _inputValidator.SanitizeId(tenantId);
 
-        if (!id)
-            return BadRequest(ApiV1Response.Failure(id.Error ?? "Invalid tenantId"));
+        if (!safeId)
+            return BadRequest(ApiV1Response.Failure(safeId.Error ?? "Invalid tenantId"));
 
-        var res = await _tenantRepository.GetTenantByTenantIdAsync(id!);
+        var res = await _tenantRepository.GetTenantByTenantIdAsync(safeId!);
         if (!res)
             return NotFound(ApiV1Response.Failure(res.Error ?? "TenantId not found"));
 
