@@ -2,7 +2,7 @@
 
 namespace DataService.Business.IO.DataView;
 
-public class TenantView : IViewCustomProps
+public class TenantView
 {
     /// <summary>
     /// External Unique Identifier for the tenant.
@@ -88,7 +88,8 @@ public class TenantView : IViewCustomProps
     /// User who created this tenant record.
     /// </summary>
     public string? CreatedBy { get; set; }
-
-    public Dictionary<string, string?> CustomProperties { get; set; } 
-        = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+    /// <summary>
+    /// Custom fields for this tenant, stored as a JSON string. This allows for flexible extension of tenant information without altering the database schema.
+    /// </summary>
+    public object? ExtProps { get; set; }
 }

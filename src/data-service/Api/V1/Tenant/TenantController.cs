@@ -1,4 +1,5 @@
 ﻿using DataService.Business.IO;
+using DataService.Business.IO.DataCommand;
 using DataService.Business.IO.DataView;
 using DataService.Business.Repository;
 using DataService.Business.Rules;
@@ -28,6 +29,16 @@ public class TenantController(
         var res = await _tenantRepository.GetTenantByTenantIdAsync(safeId!);
         if (!res)
             return NotFound(ApiV1Response.Failure(res.Error ?? "TenantId not found"));
+
+        return Ok(ApiV1Response.Read(res));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateTenant([FromBody] TenantCommand tenantCommand)
+    {
+        var res = await _tenantRepository.CreateTenantAsync(tenantCommand);
+        if (!res)
+            return BadRequest(ApiV1Response.Failure(res.Error ?? "Failed to create tenant"));
 
         return Ok(ApiV1Response.Read(res));
     }

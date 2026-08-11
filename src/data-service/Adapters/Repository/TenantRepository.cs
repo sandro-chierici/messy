@@ -6,6 +6,9 @@ using DataService.Business.IO.Mapper;
 using DataService.Business.Repository;
 using DataService.Business.Repository.Entity.Tenant;
 using DataService.Business.Rules;
+using DataService.Business.Tools;
+using System.Data;
+using System.Text.Json;
 
 namespace DataService.Adapters.Repository
 {
@@ -14,9 +17,58 @@ namespace DataService.Adapters.Repository
         private readonly IDbConnectionFactory _dbConnectionFactory = dbConnectionFactory;
         private readonly EntityMapper _entityMapper = entityMapper;
 
-        public Task<OkOrError<TenantView>> CreateTenantAsync(TenantCommand tenantCommand)
+        public async Task<OkOrError<TenantView>> CreateTenantAsync(TenantCommand tenantCommand)
         {
-            throw new NotImplementedException();
+            try
+            {
+                using var conn = await _dbConnectionFactory.CreateConnectionAsync();
+                using var transaction = conn.BeginTransaction();
+
+                var tenantId = SwissKnife.GenerateGuid();
+
+                var res = await conn.ExecuteAsync(
+                    @"INSERT INTO Tenants (tenant_id, name, code, legal_name, tax_code, country, time_zone, locale, industry_type, is_active)
+                      VALUES (@TenantId, @Name, @Code, @LegalName, @TaxCode, @Country, @TimeZone, @Locale, @IndustryType, @IsActive)",
+                    new
+                    {
+                        TenantId = tenantId,
+                        tenantCommand.Name,
+                        tenantCommand.Code,
+                        tenantCommand.LegalName,
+                        tenantCommand.TaxCode,
+                        tenantCommand.Country,
+                        tenantCommand.TimeZone,
+                        tenantCommand.Locale,
+                        tenantCommand.IndustryType,
+                        tenantCommand.IsActive
+                    },
+                    transaction);
+
+                transaction.Commit();
+
+                var tenantView = new TenantView
+                {
+                    TenantId = $"{tenantId}",
+                    Name = tenantCommand.Name,
+                    Code = tenantCommand.Code,
+                    LegalName = tenantCommand.LegalName,
+                    TaxCode = tenantCommand.TaxCode,
+                    Country = tenantCommand.Country,
+                    TimeZone = tenantCommand.TimeZone,
+                    Locale = tenantCommand.Locale,
+                    IndustryType = tenantCommand.IndustryType,
+                    IsActive = tenantCommand.IsActive
+                };
+
+                return tenantView;
+            }
+            catch (Exception ex)
+            {
+                return new OkOrError<TenantView>(
+                        Ok: false,
+                        Error: $"Error inserting new Tenant: {ex.Message}"
+                    ); ;
+            }
         }
 
         public Task<OkOrError<int>> DeleteTenantByIdAsync(int id)
@@ -34,6 +86,15 @@ namespace DataService.Adapters.Repository
             throw new NotImplementedException();
         }
 
+        //private async Task<IEnumerable<TenantExt>> LoadTenantExt(IDbConnection conn, Guid tenantId)
+        //{
+        //    var exts = await conn.QueryAsync<TenantExt>(
+        //        @"SELECT id, tenant_id AS TenantId, name AS Name, type AS Type, value AS Value, is_deleted AS IsDeleted 
+        //          FROM tenants_ext WHERE tenant_id = @TenantId AND is_deleted = False",
+        //        new { TenantId = tenantId });
+        //    return exts;
+        //}
+
         public async Task<OkOrError<TenantView>> GetTenantByIdAsync(int id)
         {
             try
@@ -41,8 +102,12 @@ namespace DataService.Adapters.Repository
                 using var conn = await _dbConnectionFactory.CreateConnectionAsync();
 
                 var tenant = await conn.QueryFirstOrDefaultAsync<Tenant>(
-                    "SELECT * FROM Tenants WHERE Id = @Id",
-                    new { id });
+                 @"SELECT id, tenant_id AS TenantId, name, code AS Code, legal_name AS LegalName, tax_code AS TaxCode, country AS Country, time_zone  AS TimeZone,
+                             locale AS Locale, industry_type AS IndustryType, is_active AS IsActive, license_type AS LicenseType, license_expires_at  AS LicenseExpiresAtUTC,
+                             max_users AS MaxUsers, max_machines AS MaxMachines, created_utc_date AS CreatedUTCDate, updated_utc_date AS UpdatedUTCDate, created_by AS CreatedBy,
+                             ext_props AS ExtProps
+                  FROM Tenants WHERE id = @Id",
+                 new { id });
 
                 if (tenant == null)
                     return new OkOrError<TenantView>(
@@ -50,13 +115,9 @@ namespace DataService.Adapters.Repository
                         Error: $"Tenant with ID {id} not found."
                     );
 
-                var exts = await conn.QueryAsync<TenantExt>(
-                    "SELECT * FROM TenantExt WHERE TenantId = @TenantId AND IsDeleted = False",
-                    new { tenant.TenantId });
-
                 return new OkOrError<TenantView>(
                     Ok: true,
-                    Value: _entityMapper.MapTenantViewFrom(tenant, exts)
+                    Value: _entityMapper.MapTenantViewFrom(tenant)
                     );
             }
             catch (Exception ex)
@@ -76,7 +137,8 @@ namespace DataService.Adapters.Repository
                 var tenant = await conn.QueryFirstOrDefaultAsync<Tenant>(
                     @"SELECT id, tenant_id AS TenantId, name, code AS Code, legal_name AS LegalName, tax_code AS TaxCode, country AS Country, time_zone  AS TimeZone,
                              locale AS Locale, industry_type AS IndustryType, is_active AS IsActive, license_type AS LicenseType, license_expires_at  AS LicenseExpiresAtUTC,
-                             max_users AS MaxUsers, max_machines AS MaxMachines, created_utc_date AS CreatedUTCDate, updated_utc_date AS UpdatedUTCDate, created_by AS CreatedBy
+                             max_users AS MaxUsers, max_machines AS MaxMachines, created_utc_date AS CreatedUTCDate, updated_utc_date AS UpdatedUTCDate, created_by AS CreatedBy,
+                             ext_props AS ExtProps
                      FROM tenants WHERE tenant_id = @TenantId::uuid",
                     new { TenantId = tenantId });
 
@@ -86,14 +148,9 @@ namespace DataService.Adapters.Repository
                         Error: $"Tenant with TenantId {tenantId} not found."
                     );
 
-                var exts = await conn.QueryAsync<TenantExt>(
-                    @"SELECT id, tenant_id AS TenantId, name AS Name, type AS Type, value AS Value, is_deleted AS IsDeleted 
-                      FROM tenants_ext WHERE tenant_id = @TenantId::uuid AND is_deleted = False",
-                    new { tenant.TenantId });
-
                 return new OkOrError<TenantView>(
                     Ok: true,
-                    Value: _entityMapper.MapTenantViewFrom(tenant, exts)
+                    Value: _entityMapper.MapTenantViewFrom(tenant)
                     );
             }
             catch (Exception ex)

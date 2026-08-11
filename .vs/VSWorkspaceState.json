@@ -1,8 +1,11 @@
 {
   "ExpandedNodes": [
     "",
-    "\\src\\data-service"
+    "\\script",
+    "\\src",
+    "\\src\\data-service",
+    "\\src\\data-service\\Api"
   ],
-  "SelectedNode": "\\.gitignore",
+  "SelectedNode": "\\src\\data-service\\Api\\HealtzController.cs",
   "PreviewInSolutionExplorer": false
 }

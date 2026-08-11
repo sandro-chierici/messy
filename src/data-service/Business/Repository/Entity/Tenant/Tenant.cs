@@ -91,4 +91,8 @@ public class Tenant : IEntity
     /// User who created this tenant record.
     /// </summary>
     public string? CreatedBy { get; set; }
+    /// <summary>
+    /// Custom fields for this tenant, stored as a JSON string. This allows for flexible extension of tenant information without altering the database schema.
+    /// </summary>
+    public string? ExtProps { get; set; }
 }
