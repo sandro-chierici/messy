@@ -1,7 +1,9 @@
 ﻿using DataService.Adapters.Repository;
 using DataService.Business.IO;
+using DataService.Business.IO.DataView;
 using DataService.Business.IO.Mapper;
 using DataService.Business.Repository;
+using DataService.Business.Repository.Entity.Tenant;
 using DataService.Business.Rules;
 using DataService.Business.Tools;
 
@@ -12,8 +14,8 @@ namespace DataService.Adapters
         public static IServiceCollection AddApplicationServices(this IServiceCollection @this)
         {
             @this.AddSingleton<InputValidator>();
-            @this.AddSingleton<EntityMapper>();
             @this.AddSingleton<SwissKnife>();
+            @this.AddSingleton<EntityMapper>();;
 
             // add dapper and database connection factory
             @this.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();

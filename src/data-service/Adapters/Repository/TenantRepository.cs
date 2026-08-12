@@ -14,8 +14,8 @@ namespace DataService.Adapters.Repository
 {
     public class TenantRepository(
         IDbConnectionFactory dbConnectionFactory,
-        EntityMapper entityMapper,
-        SwissKnife swissKnife) : ITenantRepository
+        EntityMapper entityMapper
+        ) : ITenantRepository
     {
 
         public async Task<OkOrError<TenantView>> CreateTenantAsync(TenantCommand tenantCommand)
@@ -24,45 +24,25 @@ namespace DataService.Adapters.Repository
             {
                 using var conn = await dbConnectionFactory.CreateConnectionAsync();
                 using var transaction = conn.BeginTransaction();
-
-                var tenantId = swissKnife.GenerateGuid();
+                
+                var tenant = entityMapper.MapTenantFrom(tenantCommand);
 
                 var res = await conn.ExecuteAsync(
                     @"INSERT INTO tenants 
-                             (tenant_id, name, code, legal_name, tax_code, country, time_zone, locale, industry_type, is_active)
-                      VALUES (@TenantId, @Name, @Code, @LegalName, @TaxCode, @Country, @TimeZone, @Locale, @IndustryType, @IsActive)",
-                    new
-                    {
-                        TenantId = tenantId,
-                        tenantCommand.Name,
-                        tenantCommand.Code,
-                        tenantCommand.LegalName,
-                        tenantCommand.TaxCode,
-                        tenantCommand.Country,
-                        tenantCommand.TimeZone,
-                        tenantCommand.Locale,
-                        tenantCommand.IndustryType,
-                        tenantCommand.IsActive
-                    },
+                             (tenant_id, name, code, legal_name, tax_code, 
+                              country, time_zone, locale, industry_type, is_active, 
+                              license_type, license_expires_at, max_users, max_machines, 
+                              created_utc_date, updated_utc_date, created_by, ext_props)
+                      VALUES (@TenantId, @Name, @Code, @LegalName, @TaxCode, @Country, 
+                              @TimeZone, @Locale, @IndustryType, @IsActive, @LicenseType, 
+                              @LicenseExpiresAtUTC, @MaxUsers, @MaxMachines, @CreatedUTCDate,
+                              @UpdatedUTCDate, @CreatedBy, @ExtProps::jsonb)",
+                    tenant,
                     transaction);
 
                 transaction.Commit();
 
-                var tenantView = new TenantView
-                {
-                    TenantId = $"{tenantId}",
-                    Name = tenantCommand.Name,
-                    Code = tenantCommand.Code,
-                    LegalName = tenantCommand.LegalName,
-                    TaxCode = tenantCommand.TaxCode,
-                    Country = tenantCommand.Country,
-                    TimeZone = tenantCommand.TimeZone,
-                    Locale = tenantCommand.Locale,
-                    IndustryType = tenantCommand.IndustryType,
-                    IsActive = tenantCommand.IsActive
-                };
-
-                return tenantView;
+                return entityMapper.MapTenantViewFrom(tenant);
             }
             catch (Exception ex)
             {
