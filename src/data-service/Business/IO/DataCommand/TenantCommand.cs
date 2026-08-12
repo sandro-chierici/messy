@@ -81,5 +81,9 @@ public record TenantCommand
     /// User who created this tenant record.
     /// </summary>
     public string? CreatedBy { get; set; }
+    /// <summary>
+    /// Additional properties for extensibility (e.g., custom fields).
+    /// </summary>
+    public Dictionary<string, object?>? ExtProps { get; set; }
 
 }

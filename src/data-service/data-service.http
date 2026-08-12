@@ -1,6 +1,6 @@
 @data_service_HostAddress = http://localhost:5252
 
-GET {{data_service_HostAddress}}/api/v1/tenant/019ff1fd-923f-7baa-97b2-64de66dac016
+GET {{data_service_HostAddress}}/api/v1/tenant/019ff4b4-d5ff-7edf-881e-a379b49b0951
 Accept: application/json
 
 ###
@@ -10,11 +10,11 @@ Content-Type: application/json
 
 {
     "name": "Test Tenant",
-    "code": "TEST001",
+    "code": "TEST002",
     "legalName": "Test Tenant Legal Name",
     "taxCode": "TEST001TAX",
     "country": "US",
     "timeZone": "UTC",
     "locale": "en-US",
-    "industryType": "Technology"
+    "industryType": "Manifacturer"
 }

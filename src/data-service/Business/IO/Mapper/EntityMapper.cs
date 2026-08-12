@@ -1,10 +1,12 @@
-﻿using DataService.Business.IO.DataView;
+﻿using DataService.Business.IO.DataCommand;
+using DataService.Business.IO.DataView;
 using DataService.Business.Repository.Entity.Tenant;
+using DataService.Business.Tools;
 using System.Text.Json;
 
 namespace DataService.Business.IO.Mapper;
 
-public class EntityMapper
+public class EntityMapper(SwissKnife swissKnife)
 {
     public TenantView MapTenantViewFrom(Tenant tenant)
     {
@@ -27,14 +29,9 @@ public class EntityMapper
             CreatedUTCDate = tenant.CreatedUTCDate,
             UpdatedUTCDate = tenant.UpdatedUTCDate,
             CreatedBy = tenant.CreatedBy,
-            ExtProps = JsonSerializer.Deserialize<Dictionary<string, object?>>(tenant.ExtProps?.ToString() ?? "{}")
+            ExtProps = swissKnife.DeserializeExtProps(tenant.ExtProps)
         };
 
-        //if (exts != null)
-        //    view.CustomProperties = exts
-        //        .Where(ext => !ext.IsDeleted)
-        //        .ToDictionary(ext => ext.Name, ext => ext.Value);
-
         return view;
-    }   
+    }  
 }

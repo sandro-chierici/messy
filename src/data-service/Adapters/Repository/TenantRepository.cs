@@ -12,22 +12,24 @@ using System.Text.Json;
 
 namespace DataService.Adapters.Repository
 {
-    public class TenantRepository(IDbConnectionFactory dbConnectionFactory, EntityMapper entityMapper) : ITenantRepository
+    public class TenantRepository(
+        IDbConnectionFactory dbConnectionFactory,
+        EntityMapper entityMapper,
+        SwissKnife swissKnife) : ITenantRepository
     {
-        private readonly IDbConnectionFactory _dbConnectionFactory = dbConnectionFactory;
-        private readonly EntityMapper _entityMapper = entityMapper;
 
         public async Task<OkOrError<TenantView>> CreateTenantAsync(TenantCommand tenantCommand)
         {
             try
             {
-                using var conn = await _dbConnectionFactory.CreateConnectionAsync();
+                using var conn = await dbConnectionFactory.CreateConnectionAsync();
                 using var transaction = conn.BeginTransaction();
 
-                var tenantId = SwissKnife.GenerateGuid();
+                var tenantId = swissKnife.GenerateGuid();
 
                 var res = await conn.ExecuteAsync(
-                    @"INSERT INTO Tenants (tenant_id, name, code, legal_name, tax_code, country, time_zone, locale, industry_type, is_active)
+                    @"INSERT INTO tenants 
+                             (tenant_id, name, code, legal_name, tax_code, country, time_zone, locale, industry_type, is_active)
                       VALUES (@TenantId, @Name, @Code, @LegalName, @TaxCode, @Country, @TimeZone, @Locale, @IndustryType, @IsActive)",
                     new
                     {
@@ -86,20 +88,11 @@ namespace DataService.Adapters.Repository
             throw new NotImplementedException();
         }
 
-        //private async Task<IEnumerable<TenantExt>> LoadTenantExt(IDbConnection conn, Guid tenantId)
-        //{
-        //    var exts = await conn.QueryAsync<TenantExt>(
-        //        @"SELECT id, tenant_id AS TenantId, name AS Name, type AS Type, value AS Value, is_deleted AS IsDeleted 
-        //          FROM tenants_ext WHERE tenant_id = @TenantId AND is_deleted = False",
-        //        new { TenantId = tenantId });
-        //    return exts;
-        //}
-
         public async Task<OkOrError<TenantView>> GetTenantByIdAsync(int id)
         {
             try
             {
-                using var conn = await _dbConnectionFactory.CreateConnectionAsync();
+                using var conn = await dbConnectionFactory.CreateConnectionAsync();
 
                 var tenant = await conn.QueryFirstOrDefaultAsync<Tenant>(
                  @"SELECT id, tenant_id AS TenantId, name, code AS Code, legal_name AS LegalName, tax_code AS TaxCode, country AS Country, time_zone  AS TimeZone,
@@ -117,7 +110,7 @@ namespace DataService.Adapters.Repository
 
                 return new OkOrError<TenantView>(
                     Ok: true,
-                    Value: _entityMapper.MapTenantViewFrom(tenant)
+                    Value: entityMapper.MapTenantViewFrom(tenant)
                     );
             }
             catch (Exception ex)
@@ -132,7 +125,7 @@ namespace DataService.Adapters.Repository
         {
             try
             {
-                using var conn = await _dbConnectionFactory.CreateConnectionAsync();
+                using var conn = await dbConnectionFactory.CreateConnectionAsync();
 
                 var tenant = await conn.QueryFirstOrDefaultAsync<Tenant>(
                     @"SELECT id, tenant_id AS TenantId, name, code AS Code, legal_name AS LegalName, tax_code AS TaxCode, country AS Country, time_zone  AS TimeZone,
@@ -150,7 +143,7 @@ namespace DataService.Adapters.Repository
 
                 return new OkOrError<TenantView>(
                     Ok: true,
-                    Value: _entityMapper.MapTenantViewFrom(tenant)
+                    Value: entityMapper.MapTenantViewFrom(tenant)
                     );
             }
             catch (Exception ex)

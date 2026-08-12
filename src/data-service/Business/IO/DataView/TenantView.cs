@@ -91,5 +91,5 @@ public class TenantView
     /// <summary>
     /// Custom fields for this tenant, stored as a JSON string. This allows for flexible extension of tenant information without altering the database schema.
     /// </summary>
-    public object? ExtProps { get; set; }
+    public Dictionary<string, object?>? ExtProps { get; set; }
 }

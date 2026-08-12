@@ -3,6 +3,7 @@ using DataService.Business.IO;
 using DataService.Business.IO.Mapper;
 using DataService.Business.Repository;
 using DataService.Business.Rules;
+using DataService.Business.Tools;
 
 namespace DataService.Adapters
 {
@@ -12,6 +13,7 @@ namespace DataService.Adapters
         {
             @this.AddSingleton<InputValidator>();
             @this.AddSingleton<EntityMapper>();
+            @this.AddSingleton<SwissKnife>();
 
             // add dapper and database connection factory
             @this.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
