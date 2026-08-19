@@ -4,7 +4,7 @@ using DataService.Business.Rules;
 
 namespace DataService.Business.Repository;
 
-public interface ITenantRepository
+public interface ITenantRepository: IRepository    
 {
     public Task<OkOrError<TenantView>> GetTenantByIdAsync(int tenantId);
     public Task<OkOrError<TenantView>> GetTenantByTenantIdAsync(string tenantId);
