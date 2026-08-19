@@ -9,7 +9,7 @@ namespace DataService.Api
     {
         private readonly IDbConnectionFactory dbConnectionFactory = dbConnectionFactory;
 
-        [Route("readiness")]
+        [Route("ready")]
         public async Task<IActionResult> Readiness()
         {
             try
@@ -23,7 +23,7 @@ namespace DataService.Api
             }
         }
 
-        [Route("liveness")]
+        [Route("live")]
         public IActionResult Liveness() => Ok();
     }
 }

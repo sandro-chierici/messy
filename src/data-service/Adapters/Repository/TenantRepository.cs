@@ -15,13 +15,14 @@ public class TenantRepository(
     ) : ITenantRepository
 {
 
-    public async Task<OkOrError<TenantView>> CreateTenantAsync(TenantCommand tenantCommand)
+    public async Task<OkOrError<string>> CreateTenantAsync(TenantCommand tenantCommand)
     {
         try
         {
             using var conn = await dbConnectionFactory.CreateConnectionAsync();
             using var transaction = conn.BeginTransaction();
             
+            // tenantId is generated here
             var tenant = entityMapper.MapTenantFrom(tenantCommand);
 
             var res = await conn.ExecuteAsync(
@@ -39,11 +40,11 @@ public class TenantRepository(
 
             transaction.Commit();
 
-            return entityMapper.MapTenantViewFrom(tenant);
+            return tenant.TenantId.ToString();
         }
         catch (Exception ex)
         {
-            return new OkOrError<TenantView>(
+            return new OkOrError<string>(
                     Ok: false,
                     Error: $"Error inserting new Tenant: {ex.Message}"
                 ); ;
@@ -56,11 +57,6 @@ public class TenantRepository(
     }
 
     public Task<OkOrError<int>> DeleteTenantByTenantIdAsync(string id)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<OkOrError<TenantView>> GetTenantByCodeAsync(string code)
     {
         throw new NotImplementedException();
     }

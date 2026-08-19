@@ -130,7 +130,7 @@ public class EntityMapper(SwissKnife swissKnife)
             LicenseExpiresAtUTC = tenant.LicenseExpiresAtUTC,
             MaxUsers = tenant.MaxUsers,
             MaxMachines = tenant.MaxMachines,
-            CreatedUTCDate = tenant.CreatedUTCDate,
+            CreatedUTCDate = tenant.CreatedUTCDate ?? DateTime.UtcNow,
             UpdatedUTCDate = tenant.UpdatedUTCDate,
             CreatedBy = tenant.CreatedBy,
             ExtProps = swissKnife.SerializeExtProps(tenant.ExtProps)
