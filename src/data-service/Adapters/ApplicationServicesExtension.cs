@@ -1,6 +1,6 @@
 ﻿using DataService.Adapters.Repository;
 using DataService.Business.IO;
-using DataService.Business.IO.Mapper;
+using DataService.Business.Mapper;
 using DataService.Business.Repository;
 using DataService.Business.Rules;
 using DataService.Business.Tools;

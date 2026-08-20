@@ -2,7 +2,7 @@
 using DataService.Business.IO;
 using DataService.Business.IO.DataCommand;
 using DataService.Business.IO.DataView;
-using DataService.Business.IO.Mapper;
+using DataService.Business.Mapper;
 using DataService.Business.Repository;
 using DataService.Business.Repository.Entity.Tenant;
 using DataService.Business.Rules;
@@ -81,9 +81,13 @@ public class TenantRepository(
                     Error: $"Tenant with ID {id} not found."
                 );
 
+            var view = entityMapper.Map(
+                tenant,
+                new TenantView { TenantId = tenant.TenantId.ToString() });
+
             return new OkOrError<TenantView>(
                 Ok: true,
-                Value: entityMapper.MapTenantViewFrom(tenant)
+                Value: view
                 );
         }
         catch (Exception ex)
@@ -116,7 +120,9 @@ public class TenantRepository(
 
             return new OkOrError<TenantView>(
                 Ok: true,
-                Value: entityMapper.MapTenantViewFrom(tenant)
+                Value: entityMapper.Map(
+                    tenant, 
+                    new TenantView { TenantId = tenant.TenantId.ToString() })
                 );
         }
         catch (Exception ex)
