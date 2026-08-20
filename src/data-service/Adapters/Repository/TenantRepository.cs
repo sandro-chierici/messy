@@ -1,8 +1,7 @@
 ﻿using Dapper;
 using DataService.Business.IO;
-using DataService.Business.IO.DataCommand;
-using DataService.Business.IO.DataView;
-using DataService.Business.Mapper;
+using DataService.Business.IO.Tenant;
+using DataService.Business.Mapper.Tenant;
 using DataService.Business.Repository;
 using DataService.Business.Repository.Entity.Tenant;
 using DataService.Business.Rules;
@@ -11,7 +10,7 @@ namespace DataService.Adapters.Repository;
 
 public class TenantRepository(
     IDbConnectionFactory dbConnectionFactory,
-    EntityMapper entityMapper
+    TenantMapper tenantMapper   
     ) : ITenantRepository
 {
 
@@ -23,7 +22,7 @@ public class TenantRepository(
             using var transaction = conn.BeginTransaction();
             
             // tenantId is generated here
-            var tenant = entityMapper.MapTenantFrom(tenantCommand);
+            var tenant = tenantMapper.MapTenantFrom(tenantCommand);
 
             var res = await conn.ExecuteAsync(
                 @"INSERT INTO tenants 
@@ -46,7 +45,7 @@ public class TenantRepository(
         {
             return new OkOrError<string>(
                     Ok: false,
-                    Error: $"Error inserting new Tenant: {ex.Message}"
+                    Error: $"Error inserting new TenantModel: {ex.Message}"
                 ); ;
         }
     }
@@ -67,7 +66,7 @@ public class TenantRepository(
         {
             using var conn = await dbConnectionFactory.CreateConnectionAsync();
 
-            var tenant = await conn.QueryFirstOrDefaultAsync<Tenant>(
+            var tenant = await conn.QueryFirstOrDefaultAsync<TenantModel>(
              @"SELECT id, tenant_id AS TenantId, name, code AS Code, legal_name AS LegalName, tax_code AS TaxCode, country AS Country, time_zone  AS TimeZone,
                              locale AS Locale, industry_type AS IndustryType, is_active AS IsActive, license_type AS LicenseType, license_expires_at  AS LicenseExpiresAtUTC,
                              max_users AS MaxUsers, max_machines AS MaxMachines, created_utc_date AS CreatedUTCDate, updated_utc_date AS UpdatedUTCDate, created_by AS CreatedBy,
@@ -78,16 +77,12 @@ public class TenantRepository(
             if (tenant == null)
                 return new OkOrError<TenantView>(
                     Ok: false,
-                    Error: $"Tenant with ID {id} not found."
+                    Error: $"TenantModel with ID {id} not found."
                 );
-
-            var view = entityMapper.Map(
-                tenant,
-                new TenantView { TenantId = tenant.TenantId.ToString() });
 
             return new OkOrError<TenantView>(
                 Ok: true,
-                Value: view
+                Value: tenantMapper.MapTenantViewFrom(tenant)
                 );
         }
         catch (Exception ex)
@@ -104,7 +99,7 @@ public class TenantRepository(
         {
             using var conn = await dbConnectionFactory.CreateConnectionAsync();
 
-            var tenant = await conn.QueryFirstOrDefaultAsync<Tenant>(
+            var tenant = await conn.QueryFirstOrDefaultAsync<TenantModel>(
                 @"SELECT id, tenant_id AS TenantId, name, code AS Code, legal_name AS LegalName, tax_code AS TaxCode, country AS Country, time_zone  AS TimeZone,
                              locale AS Locale, industry_type AS IndustryType, is_active AS IsActive, license_type AS LicenseType, license_expires_at  AS LicenseExpiresAtUTC,
                              max_users AS MaxUsers, max_machines AS MaxMachines, created_utc_date AS CreatedUTCDate, updated_utc_date AS UpdatedUTCDate, created_by AS CreatedBy,
@@ -115,14 +110,12 @@ public class TenantRepository(
             if (tenant == null)
                 return new OkOrError<TenantView>(
                     Ok: false,
-                    Error: $"Tenant with TenantId {tenantId} not found."
+                    Error: $"TenantModel with TenantId {tenantId} not found."
                 );
 
             return new OkOrError<TenantView>(
                 Ok: true,
-                Value: entityMapper.Map(
-                    tenant, 
-                    new TenantView { TenantId = tenant.TenantId.ToString() })
+                Value: tenantMapper.MapTenantViewFrom(tenant)
                 );
         }
         catch (Exception ex)

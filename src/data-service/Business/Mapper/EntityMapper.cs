@@ -1,7 +1,4 @@
-﻿using DataService.Business.IO.DataCommand;
-using DataService.Business.IO.DataView;
-using DataService.Business.Repository.Entity.Tenant;
-using DataService.Business.Tools;
+﻿using DataService.Business.Tools;
 using System.Reflection;
 
 namespace DataService.Business.Mapper;
@@ -53,7 +50,7 @@ public class EntityMapper(SwissKnife swissKnife)
     /// <summary>
     /// Maps an object from source type to destination type.
     /// </summary>
-    public TDestination Map<TSource, TDestination>(TSource source) 
+    public TDestination Map<TSource, TDestination>(TSource source)
         where TDestination : new()
     {
         if (source == null) throw new ArgumentNullException(nameof(source));
@@ -88,50 +85,4 @@ public class EntityMapper(SwissKnife swissKnife)
             throw new InvalidOperationException($"Mapping from {typeof(TSource).Name} to {typeof(TDestination).Name} failed.", ex);
         }
     }
-
-    public TenantView MapTenantViewFrom(Tenant tenant) =>
-        new TenantView
-        {
-            TenantId = $"{tenant.TenantId}",
-            Name = tenant.Name,
-            Code = tenant.Code,
-            LegalName = tenant.LegalName,
-            TaxCode = tenant.TaxCode,
-            Country = tenant.Country,
-            TimeZone = tenant.TimeZone,
-            Locale = tenant.Locale,
-            IndustryType = tenant.IndustryType,
-            IsActive = tenant.IsActive,
-            LicenseType = tenant.LicenseType,
-            LicenseExpiresAtUTC = tenant.LicenseExpiresAtUTC,
-            MaxUsers = tenant.MaxUsers,
-            MaxMachines = tenant.MaxMachines,
-            CreatedUTCDate = tenant.CreatedUTCDate,
-            UpdatedUTCDate = tenant.UpdatedUTCDate,
-            CreatedBy = tenant.CreatedBy,
-            ExtProps = swissKnife.DeserializeExtProps(tenant.ExtProps)
-        };
-
-    public Tenant MapTenantFrom(TenantCommand tenant) =>
-        new Tenant
-        {
-            TenantId = swissKnife.GenerateGuid(),
-            Name = tenant.Name,
-            Code = tenant.Code,
-            LegalName = tenant.LegalName,
-            TaxCode = tenant.TaxCode,
-            Country = tenant.Country,
-            TimeZone = tenant.TimeZone,
-            Locale = tenant.Locale,
-            IndustryType = tenant.IndustryType,
-            IsActive = tenant.IsActive,
-            LicenseType = tenant.LicenseType,
-            LicenseExpiresAtUTC = tenant.LicenseExpiresAtUTC,
-            MaxUsers = tenant.MaxUsers,
-            MaxMachines = tenant.MaxMachines,
-            CreatedUTCDate = tenant.CreatedUTCDate ?? DateTime.UtcNow,
-            UpdatedUTCDate = tenant.UpdatedUTCDate,
-            CreatedBy = tenant.CreatedBy,
-            ExtProps = swissKnife.SerializeExtProps(tenant.ExtProps)
-        };
 }

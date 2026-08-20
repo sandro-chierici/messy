@@ -1,5 +1,4 @@
-﻿using DataService.Business.IO.DataCommand;
-using DataService.Business.IO.DataView;
+﻿using DataService.Business.IO.Tenant;
 using DataService.Business.Rules;
 
 namespace DataService.Business.Repository;

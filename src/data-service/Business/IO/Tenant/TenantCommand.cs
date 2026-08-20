@@ -1,14 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿namespace DataService.Business.IO.Tenant;
 
-namespace DataService.Business.IO.DataView;
-
-public class TenantView
+public record TenantCommand
 {
-    /// <summary>
-    /// External Unique Identifier for the tenant.
-    /// </summary>
-    public required string TenantId { get; set; }
-
     /// <summary>
     /// Display name of the tenant (plant or company name).
     /// </summary>
@@ -89,7 +82,8 @@ public class TenantView
     /// </summary>
     public string? CreatedBy { get; set; }
     /// <summary>
-    /// Custom fields for this tenant, stored as a JSON string. This allows for flexible extension of tenant information without altering the database schema.
+    /// Additional properties for extensibility (e.g., custom fields).
     /// </summary>
     public Dictionary<string, object?>? ExtProps { get; set; }
+
 }

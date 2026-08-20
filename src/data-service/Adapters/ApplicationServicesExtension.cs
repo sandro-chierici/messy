@@ -1,6 +1,7 @@
 ﻿using DataService.Adapters.Repository;
 using DataService.Business.IO;
 using DataService.Business.Mapper;
+using DataService.Business.Mapper.Tenant;
 using DataService.Business.Repository;
 using DataService.Business.Rules;
 using DataService.Business.Tools;
@@ -13,7 +14,10 @@ public static class ApplicationServicesExtension
     {
         @this.AddSingleton<InputValidator>();
         @this.AddSingleton<SwissKnife>();
-        @this.AddSingleton<EntityMapper>();;
+
+        // add mappers
+        @this.AddSingleton<EntityMapper>();
+        @this.AddSingleton<TenantMapper>();
 
         // add dapper and database connection factory
         @this.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
