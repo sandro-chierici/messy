@@ -1,7 +1,12 @@
 using DataService.Adapters;
+using DataService.Business.Rules;
 using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// read config
+builder.Services.Configure<FeatureFlagOptions>(
+    builder.Configuration.GetSection(key: "FeatureFlag"));
 
 // Add services to the container.
 
