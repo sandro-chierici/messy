@@ -1,9 +1,11 @@
 ﻿using DataService.Adapters.Repository;
+using DataService.Adapters.Services;
 using DataService.Business.IO;
 using DataService.Business.Mapper;
 using DataService.Business.Mapper.Tenant;
 using DataService.Business.Repository;
 using DataService.Business.Rules;
+using DataService.Business.Services;
 using DataService.Business.Tools;
 
 namespace DataService.Adapters;
@@ -20,10 +22,13 @@ public static class ApplicationServicesExtension
         @this.AddSingleton<TenantMapper>();
 
         // add dapper and database connection factory
-        @this.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
+        @this.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();
 
         // add repositories       
         DiscoverAndRegisterRepositories(services: @this);
+
+        // add services
+        @this.AddScoped<ITenantService, TenantService>();
 
         return @this;
     }

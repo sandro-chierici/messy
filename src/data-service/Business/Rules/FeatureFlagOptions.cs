@@ -11,9 +11,8 @@ public class FeatureFlagOptions
     /// <param name="ConnectionTimeout"></param>
     public class DatabaseFeature()
     {
-        public int ConnectionTimeoutMillis { get; set; }
     }
 
-    public DatabaseFeature Database { get; set; } = new DatabaseFeature { ConnectionTimeoutMillis = 20000 };
+    public DatabaseFeature Database { get; set; } = new DatabaseFeature { };
 
 }

@@ -3,7 +3,7 @@ using DataService.Business.IO;
 using DataService.Business.IO.Tenant;
 using DataService.Business.Mapper.Tenant;
 using DataService.Business.Repository;
-using DataService.Business.Repository.Entity.Tenant;
+using DataService.Business.Repository.Models;
 using DataService.Business.Rules;
 
 namespace DataService.Adapters.Repository;
@@ -14,15 +14,14 @@ public class TenantRepository(
     ) : ITenantRepository
 {
 
-    public async Task<OkOrError<string>> CreateTenantAsync(TenantCommand tenantCommand)
+    public async Task<OkOrError<string>> CreateTenantAsync(Guid tenantId, TenantCommand command)
     {
         try
         {
             using var conn = await dbConnectionFactory.CreateConnectionAsync();
             using var transaction = conn.BeginTransaction();
-            
-            // tenantId is generated here
-            var tenant = tenantMapper.MapTenantFrom(tenantCommand);
+
+            var model = tenantMapper.MapTenantFrom(command, tenantId);
 
             var res = await conn.ExecuteAsync(
                 @"INSERT INTO tenants 
@@ -34,12 +33,12 @@ public class TenantRepository(
                               @TimeZone, @Locale, @IndustryType, @IsActive, @LicenseType, 
                               @LicenseExpiresAtUTC, @MaxUsers, @MaxMachines, @CreatedUTCDate,
                               @UpdatedUTCDate, @CreatedBy, @ExtProps::jsonb)",
-                tenant,
+                model,
                 transaction);
 
             transaction.Commit();
 
-            return tenant.TenantId.ToString();
+            return model.TenantId.ToString();
         }
         catch (Exception ex)
         {
@@ -124,15 +123,5 @@ public class TenantRepository(
                 Ok: false,
                 Error: $"An error occurred while retrieving the tenant with TenantId {tenantId}. Error: {ex.Message}");
         }
-    }
-
-    public Task<OkOrError<TenantView>> UpdateTenantByIdAsync(int id, TenantCommand tenantCommand)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<OkOrError<TenantView>> UpdateTenantByTenantIdAsync(string id, TenantCommand tenantCommand)
-    {
-        throw new NotImplementedException();
     }
 }

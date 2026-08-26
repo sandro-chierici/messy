@@ -1,7 +1,7 @@
 ﻿using DataService.Business.IO;
 using DataService.Business.IO.Tenant;
-using DataService.Business.Repository;
 using DataService.Business.Rules;
+using DataService.Business.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataService.Api.V1.Tenant;
@@ -10,11 +10,10 @@ namespace DataService.Api.V1.Tenant;
 [ApiController]
 public class TenantController(
     InputValidator validator,
-    ITenantRepository tenantRepository
+    ITenantService tenantService
     ) : ControllerBase
 {
     private readonly InputValidator _inputValidator = validator;
-    private readonly ITenantRepository _tenantRepository = tenantRepository;
 
     [HttpGet]
     [Route("{tenantId}")]
@@ -25,7 +24,7 @@ public class TenantController(
         if (!safeId)
             return BadRequest(ApiV1Response.Failure(safeId.Error ?? "Invalid tenantId"));
 
-        var res = await _tenantRepository.GetTenantByTenantIdAsync(safeId!);
+        var res = await tenantService.GetTenantAsync(safeId!);
         if (!res)
             return NotFound(ApiV1Response.Failure(res.Error ?? "TenantId not found"));
 
@@ -35,7 +34,7 @@ public class TenantController(
     [HttpPost]
     public async Task<IActionResult> CreateTenant([FromBody] TenantCommand tenantCommand)
     {
-        var res = await _tenantRepository.CreateTenantAsync(tenantCommand);
+        var res = await tenantService.CreateTenantAsync(tenantCommand);
         if (!res)
             return BadRequest(ApiV1Response.Failure(res.Error ?? "Failed to create tenant"));
 

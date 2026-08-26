@@ -1,5 +1,5 @@
 ﻿using DataService.Business.IO.Tenant;
-using DataService.Business.Repository.Entity.Tenant;
+using DataService.Business.Repository.Models;
 using DataService.Business.Tools;
 
 namespace DataService.Business.Mapper.Tenant;
@@ -33,10 +33,10 @@ public class TenantMapper(
            ExtProps = swissKnife.DeserializeExtProps(tenant.ExtProps)
        };
 
-    public TenantModel MapTenantFrom(TenantCommand tenant) =>
+    public TenantModel MapTenantFrom(TenantCommand tenant, Guid tenantId) =>
         new TenantModel
         {
-            TenantId = swissKnife.GenerateGuid(),
+            TenantId = tenantId,
             Name = tenant.Name,
             Code = tenant.Code,
             LegalName = tenant.LegalName,

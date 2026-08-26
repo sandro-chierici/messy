@@ -29,9 +29,8 @@ public class NpgsqlConnectionFactory : IDbConnectionFactory
     {
         try
         {
-            using var ctSource = new CancellationTokenSource(_featureFlagOptions.Database.ConnectionTimeoutMillis);
             var connection = new NpgsqlConnection(_connectionString);
-            await connection.OpenAsync(ctSource.Token);
+            await connection.OpenAsync();
             return connection;
         }
         catch (Exception ex)

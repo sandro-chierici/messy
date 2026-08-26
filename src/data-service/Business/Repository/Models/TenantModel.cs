@@ -1,5 +1,4 @@
-﻿
-namespace DataService.Business.Repository.Entity.Tenant;
+﻿namespace DataService.Business.Repository.Models;
 
 public class TenantModel
 {

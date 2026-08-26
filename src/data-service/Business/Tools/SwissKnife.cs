@@ -25,7 +25,7 @@ namespace DataService.Business.Tools
             catch (JsonException)
             {
                 logger.LogError("Failed to deserialize ExtProps JSON: {ExtPropsJson}", extPropsJson);
-                return new Dictionary<string, object?>();
+                throw new InvalidOperationException($"Failed to deserialize ExtProps JSON: {extPropsJson}");
             }
         }
 
@@ -41,7 +41,7 @@ namespace DataService.Business.Tools
             catch (JsonException)
             {
                 logger.LogError("Failed to serialize ExtProps dictionary: {ExtProps}", extProps);
-                return "{}";
+                throw new InvalidOperationException($"Failed to serialize ExtProps dictionary: {extProps}");
             }
         }
     }
