@@ -1,5 +1,5 @@
-using DataService.Adapters;
-using DataService.Business.Rules;
+using DataService.Infrastructure;
+using DataService.Domain.Rules;
 using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);

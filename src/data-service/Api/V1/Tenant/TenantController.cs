@@ -1,7 +1,7 @@
-﻿using DataService.Business.IO;
-using DataService.Business.IO.Tenant;
-using DataService.Business.Rules;
-using DataService.Business.Services;
+﻿using DataService.Domain.IO;
+using DataService.Domain.IO.Tenant;
+using DataService.Domain.Rules;
+using DataService.Domain.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataService.Api.V1.Tenant;
