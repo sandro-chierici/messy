@@ -25,7 +25,7 @@ namespace DataService.Infrastructure.Services.Events
         {
             await _eventChannel.Writer.WriteAsync(@event);
         }
-        public async ValueTask<EventBase> ConsumeEventAsync(EventBase @event)
+        public async ValueTask<EventBase> ConsumeEventAsync()
         {   
             return  await _eventChannel.Reader.ReadAsync();
         }

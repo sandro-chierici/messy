@@ -28,7 +28,7 @@ public class TenantController(
         if (!res)
             return NotFound(ApiV1Response.Failure(res.Error ?? "TenantId not found"));
 
-        return Ok(ApiV1Response.Read(res.Value!));
+        return Ok(ApiV1Response.Read(data: res.Value!));
     }
 
     [HttpPost]
@@ -40,7 +40,7 @@ public class TenantController(
         
         return Created(
             uri: $"{BaseUri}/{res.Value}", 
-            value: ApiV1Response.Read(res.Value!));
+            value: ApiV1Response.Read(new { TenantId = res.Value }));
     }
 
 }

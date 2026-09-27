@@ -2,6 +2,6 @@
 {
     public interface IEventConsumer
     {
-        ValueTask<EventBase> ConsumeEventAsync(EventBase @event);
+        ValueTask<EventBase> ConsumeEventAsync();
     }
 }

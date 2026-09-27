@@ -1,11 +1,16 @@
 {
   "ExpandedNodes": [
     "",
-    "\\script",
     "\\src",
     "\\src\\data-service",
-    "\\src\\data-service\\Api"
+    "\\src\\data-service\\Api",
+    "\\src\\data-service\\Api\\V1",
+    "\\src\\data-service\\Api\\V1\\Tenant",
+    "\\src\\data-service\\Domain",
+    "\\src\\data-service\\Domain\\Repository",
+    "\\src\\data-service\\Infrastructure",
+    "\\src\\data-service\\Infrastructure\\Repository"
   ],
-  "SelectedNode": "\\src\\data-service\\Api\\HealtzController.cs",
+  "SelectedNode": "\\src\\data-service\\Infrastructure\\Repository\\TenantRepository.cs",
   "PreviewInSolutionExplorer": false
 }

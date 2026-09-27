@@ -1,12 +1,13 @@
-﻿using DataService.Infrastructure.Repository;
-using DataService.Infrastructure.Services;
-using DataService.Domain.IO;
+﻿using DataService.Domain.IO;
 using DataService.Domain.Mapper;
 using DataService.Domain.Mapper.Tenant;
 using DataService.Domain.Repository;
 using DataService.Domain.Rules;
 using DataService.Domain.Services;
+using DataService.Domain.Services.Events;
 using DataService.Domain.Tools;
+using DataService.Infrastructure.Services;
+using DataService.Infrastructure.Services.Events;
 
 namespace DataService.Infrastructure;
 
@@ -29,6 +30,10 @@ public static class ApplicationServicesExtension
 
         // add services
         @this.AddScoped<ITenantService, TenantService>();
+
+        // add pulbisher and consumers for events
+        @this.AddSingleton<IEventPublisher, EventBrokerAdapter>();
+        @this.AddSingleton<IEventConsumer, EventBrokerAdapter>();
 
         return @this;
     }

@@ -7,6 +7,7 @@
     <RootNamespace>DataService</RootNamespace>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
+    <UserSecretsId>65d89604-0dbb-4b00-ab3f-cbe44cee0c39</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

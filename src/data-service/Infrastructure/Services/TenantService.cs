@@ -13,7 +13,8 @@ namespace DataService.Infrastructure.Services;
 /// <param name="tenantRepository"></param>
 /// <param name="swissKnife"></param>
 public class TenantService(
-    ITenantRepository tenantRepository, 
+    ITenantRepository tenantRepository,
+    IEventPublisher eventPublisher,
     SwissKnife swissKnife) : ITenantService
 {
     public async Task<OkOrError<TenantViewDTO>> GetTenantAsync(string tenantId)
@@ -27,9 +28,9 @@ public class TenantService(
 
         var res = await tenantRepository.CreateTenantAsync(newTenantId, tenantCommand);
 
-        var ev = res switch
+        EventBase ev = res switch
         {
-            OkOrError<string> { Ok: true } => new CreatedEvent 
+            OkOrError<string> { Ok: true } => new CreatedEvent
             {
                 Producer = "TenantService.CreateTenantAsync",
                 ResourceName = "Tenant",
@@ -37,18 +38,20 @@ public class TenantService(
                 ResourceType = "Tenant"
             },
 
-            OkOrError<string> { Ok: false, Error: var error } => new FailureEvent 
-            { 
+            OkOrError<string> { Ok: false, Error: var error } => new FailureEvent
+            {
                 Producer = "TenantService.CreateTenantAsync",
                 ResourceName = "Tenant",
                 ResourceId = newTenantId.ToString(),
                 ResourceType = "Tenant",
                 ErrorMessage = error ?? "Unknown error creating tenant"
             },
-            _ => null
         };
 
-        return newTenantId.ToString();
+        // publish the event
+        await eventPublisher.PublishEventAsync(ev);
+
+        return res;
     }
 
     public async Task<OkOrError<TenantViewDTO>> UpdateTenantAsync(string id, TenantCreateDTO tenantCommand)
