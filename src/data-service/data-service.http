@@ -1,6 +1,6 @@
 @data_service_HostAddress = http://localhost:5252
 
-GET {{data_service_HostAddress}}/api/v1/tenant/01a01bae-7514-7958-8d3c-015e6a56b664
+GET {{data_service_HostAddress}}/api/v1/tenant/01a01bae-7514-795008-8d3c-015e6a56b664
 Accept: application/json
 
 ###

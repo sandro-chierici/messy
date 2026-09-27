@@ -14,7 +14,7 @@ public class TenantRepository(
     ) : ITenantRepository
 {
 
-    public async Task<OkOrError<string>> CreateTenantAsync(Guid tenantId, TenantCommand command)
+    public async Task<OkOrError<string>> CreateTenantAsync(Guid tenantId, TenantCreateDTO command)
     {
         try
         {
@@ -44,7 +44,7 @@ public class TenantRepository(
         {
             return new OkOrError<string>(
                     Ok: false,
-                    Error: $"Error inserting new TenantModel: {ex.Message}"
+                    Error: $"Error inserting new Tenant: {ex.Message}"
                 ); ;
         }
     }
@@ -59,13 +59,13 @@ public class TenantRepository(
         throw new NotImplementedException();
     }
 
-    public async Task<OkOrError<TenantView>> GetTenantByIdAsync(int id)
+    public async Task<OkOrError<TenantViewDTO>> GetTenantByIdAsync(int id)
     {
         try
         {
             using var conn = await dbConnectionFactory.CreateConnectionAsync();
 
-            var tenant = await conn.QueryFirstOrDefaultAsync<TenantModel>(
+            var tenant = await conn.QueryFirstOrDefaultAsync<Tenant>(
              @"SELECT id, tenant_id AS TenantId, name, code AS Code, legal_name AS LegalName, tax_code AS TaxCode, country AS Country, time_zone  AS TimeZone,
                              locale AS Locale, industry_type AS IndustryType, is_active AS IsActive, license_type AS LicenseType, license_expires_at  AS LicenseExpiresAtUTC,
                              max_users AS MaxUsers, max_machines AS MaxMachines, created_utc_date AS CreatedUTCDate, updated_utc_date AS UpdatedUTCDate, created_by AS CreatedBy,
@@ -74,31 +74,31 @@ public class TenantRepository(
              new { id });
 
             if (tenant == null)
-                return new OkOrError<TenantView>(
+                return new OkOrError<TenantViewDTO>(
                     Ok: false,
-                    Error: $"TenantModel with ID {id} not found."
+                    Error: $"Tenant with ID {id} not found."
                 );
 
-            return new OkOrError<TenantView>(
+            return new OkOrError<TenantViewDTO>(
                 Ok: true,
                 Value: tenantMapper.MapTenantViewFrom(tenant)
                 );
         }
         catch (Exception ex)
         {
-            return new OkOrError<TenantView>(
+            return new OkOrError<TenantViewDTO>(
                 Ok: false,
                 Error: $"An error occurred while retrieving the tenant with ID {id}. Error: {ex.Message}");
         }
     }
 
-    public async Task<OkOrError<TenantView>> GetTenantByTenantIdAsync(string tenantId)
+    public async Task<OkOrError<TenantViewDTO>> GetTenantByTenantIdAsync(string tenantId)
     {
         try
         {
             using var conn = await dbConnectionFactory.CreateConnectionAsync();
 
-            var tenant = await conn.QueryFirstOrDefaultAsync<TenantModel>(
+            var tenant = await conn.QueryFirstOrDefaultAsync<Tenant>(
                 @"SELECT id, tenant_id AS TenantId, name, code AS Code, legal_name AS LegalName, tax_code AS TaxCode, country AS Country, time_zone  AS TimeZone,
                              locale AS Locale, industry_type AS IndustryType, is_active AS IsActive, license_type AS LicenseType, license_expires_at  AS LicenseExpiresAtUTC,
                              max_users AS MaxUsers, max_machines AS MaxMachines, created_utc_date AS CreatedUTCDate, updated_utc_date AS UpdatedUTCDate, created_by AS CreatedBy,
@@ -107,19 +107,19 @@ public class TenantRepository(
                 new { TenantId = tenantId });
 
             if (tenant == null)
-                return new OkOrError<TenantView>(
+                return new OkOrError<TenantViewDTO>(
                     Ok: false,
-                    Error: $"TenantModel with TenantId {tenantId} not found."
+                    Error: $"Tenant with TenantId {tenantId} not found."
                 );
 
-            return new OkOrError<TenantView>(
+            return new OkOrError<TenantViewDTO>(
                 Ok: true,
                 Value: tenantMapper.MapTenantViewFrom(tenant)
                 );
         }
         catch (Exception ex)
         {
-            return new OkOrError<TenantView>(
+            return new OkOrError<TenantViewDTO>(
                 Ok: false,
                 Error: $"An error occurred while retrieving the tenant with TenantId {tenantId}. Error: {ex.Message}");
         }

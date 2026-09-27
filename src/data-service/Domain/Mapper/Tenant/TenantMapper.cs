@@ -7,8 +7,8 @@ namespace DataService.Domain.Mapper.Tenant;
 public class TenantMapper(
     SwissKnife swissKnife) 
 {
-    public TenantView MapTenantViewFrom(TenantModel tenant) =>
-       new TenantView
+    public TenantViewDTO MapTenantViewFrom(Repository.Models.Tenant tenant) =>
+       new TenantViewDTO
        {
            TenantId = $"{tenant.TenantId}",
            Name = tenant.Name,
@@ -30,8 +30,8 @@ public class TenantMapper(
            ExtProps = swissKnife.DeserializeExtProps(tenant.ExtProps)
        };
 
-    public TenantModel MapTenantFrom(TenantCommand tenant, Guid tenantId) =>
-        new TenantModel
+    public Repository.Models.Tenant MapTenantFrom(TenantCreateDTO tenant, Guid tenantId) =>
+        new Repository.Models.Tenant
         {
             TenantId = tenantId,
             Name = tenant.Name,
