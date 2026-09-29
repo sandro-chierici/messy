@@ -1,6 +1,6 @@
 @data_service_HostAddress = http://localhost:5252
 
-GET {{data_service_HostAddress}}/api/v1/tenant/01a01bae-7514-795008-8d3c-015e6a56b664
+GET {{data_service_HostAddress}}/api/v1/tenant/01a0ee95-97e0-7ee7-b74a-e12e8f6032a5
 Accept: application/json
 
 ###
@@ -24,6 +24,88 @@ Content-Type: application/json
       "arrayProp": ["12", "24"]
     }
 }
+
+### users (replace with a real tenant id returned by POST /api/v1/tenant)
+
+@tenantId = 01a0ee95-97e0-7ee7-b74a-e12e8f6032a5
+@userId = 00000000-0000-0000-0000-000000000000
+@securityGroupId = 00000000-0000-0000-0000-000000000000
+
+GET {{data_service_HostAddress}}/api/v1/role-types
+
+###
+
+GET {{data_service_HostAddress}}/api/v1/security-permissions
+
+###
+
+POST {{data_service_HostAddress}}/api/v1/tenant/{{tenantId}}/security-groups
+Content-Type: application/json
+
+{
+    "name": "Operators",
+    "description": "Machine operators",
+    "permissionCodes": ["USER_VIEW" , "TENANT_VIEW"]
+}
+
+###
+
+GET {{data_service_HostAddress}}/api/v1/tenant/{{tenantId}}/security-groups
+
+###
+
+POST {{data_service_HostAddress}}/api/v1/tenant/{{tenantId}}/users
+Content-Type: application/json
+
+{
+    "username": "giovanni.rossi",
+    "password": "ChangeMe-123",
+    "firstName": "Mario",
+    "lastName": "Rossi",
+    "gender": "M",
+    "roleCodes": ["OPERATOR"],
+    "securityGroupIds": null,
+    "extProps": { "badge": "A-0042" }
+}
+
+###
+
+GET {{data_service_HostAddress}}/api/v1/tenant/{{tenantId}}/users?page=1&pageSize=50
+
+###
+
+GET {{data_service_HostAddress}}/api/v1/tenant/{{tenantId}}/users/{{userId}}
+
+###
+
+PUT {{data_service_HostAddress}}/api/v1/tenant/{{tenantId}}/users/{{userId}}
+Content-Type: application/json
+
+{
+    "firstName": "Mario",
+    "lastName": "Bianchi",
+    "enabled": true,
+    "lastLocale": "it-IT",
+    "lastTimeZone": "Europe/Rome"
+}
+
+###
+
+PUT {{data_service_HostAddress}}/api/v1/tenant/{{tenantId}}/users/{{userId}}/roles
+Content-Type: application/json
+
+{ "roleCodes": ["OPERATOR", "SUPERVISOR"] }
+
+###
+
+PUT {{data_service_HostAddress}}/api/v1/tenant/{{tenantId}}/users/{{userId}}/security-groups
+Content-Type: application/json
+
+{ "securityGroupIds": ["{{securityGroupId}}"] }
+
+###
+
+DELETE {{data_service_HostAddress}}/api/v1/tenant/{{tenantId}}/users/{{userId}}
 
 ### readiness
 
