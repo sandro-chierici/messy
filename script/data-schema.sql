@@ -25,19 +25,6 @@ CREATE INDEX idx_tenants_code       ON tenants (code);
 CREATE INDEX idx_tenants_is_active  ON tenants (is_active);
 
 
-CREATE TABLE tenants_ext (
-    id          BIGSERIAL       PRIMARY KEY,
-    tenant_id   UUID            NOT NULL REFERENCES tenants (tenant_id),
-    name        VARCHAR(255)    NOT NULL,
-    type        VARCHAR(50)     NOT NULL DEFAULT 'String',
-    value       TEXT,
-    is_deleted  BOOLEAN         NOT NULL DEFAULT FALSE
-);
-
-CREATE INDEX idx_tenant_ext_tenant_id            ON tenants_ext (tenant_id);
-CREATE INDEX idx_tenant_ext_tenant_id_name       ON tenants_ext (tenant_id, name);
-CREATE INDEX idx_tenant_ext_is_deleted           ON tenants_ext (is_deleted);
-
 
 -- ============================================================================
 -- Users (OFBiz Party model, core subset). Rules: see .claude/skills/create-entity
