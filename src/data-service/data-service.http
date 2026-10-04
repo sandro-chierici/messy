@@ -58,7 +58,7 @@ POST {{data_service_HostAddress}}/api/v1/tenant/{{tenantId}}/users
 Content-Type: application/json
 
 {
-    "username": "giovanni.rossi",
+    "username": "pippo.rossi",
     "password": "ChangeMe-123",
     "firstName": "Mario",
     "lastName": "Rossi",

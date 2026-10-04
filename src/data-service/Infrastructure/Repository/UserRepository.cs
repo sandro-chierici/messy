@@ -13,7 +13,7 @@ namespace DataService.Infrastructure.Repository;
 public class UserRepository(
     IDbConnectionFactory dbConnectionFactory,
     UserMapper userMapper
-    ) : IUserRepository
+    ) : BaseRepository, IUserRepository
 {
     /// <summary>
     /// Internal primary keys of a user. They never leave this class.
@@ -35,8 +35,12 @@ public class UserRepository(
                JOIN user_logins ul ON ul.party_pk = p.id ";
 
     public async Task<OkOrError<string>> CreateUserAsync(
-        Guid tenantId, Guid partyId, Guid userLoginId, UserCreateDTO command,
-        IReadOnlyCollection<Guid> securityGroupIds, string passwordHash)
+        Guid tenantId, 
+        Guid partyId, 
+        Guid userLoginId, 
+        UserCreateDTO command,
+        IReadOnlyCollection<Guid> securityGroupIds, 
+        string passwordHash)
     {
         try
         {
@@ -45,12 +49,15 @@ public class UserRepository(
 
             var tenantPk = await conn.ExecuteScalarAsync<int?>(
                 "SELECT id FROM tenants WHERE tenant_id = @TenantId",
-                new { TenantId = tenantId }, transaction);
+                new { TenantId = tenantId }, 
+                transaction);
+
             if (tenantPk == null)
                 return new OkOrError<string>(false, Error: $"Tenant with TenantId {tenantId} not found.");
 
             var partyTypePk = await conn.ExecuteScalarAsync<int>(
-                "SELECT id FROM party_types WHERE code = 'PERSON'", transaction: transaction);
+                "SELECT id FROM party_types WHERE code = 'PERSON'", 
+                transaction: transaction);
 
             var party = userMapper.MapPartyFrom(command, partyId);
             party.TenantPk = tenantPk.Value;
@@ -63,7 +70,8 @@ public class UserRepository(
                   VALUES (@PartyId, @TenantPk, @PartyTypePk, @ExternalId, @Description, @IsActive,
                           @CreatedUTCDate, @UpdatedUTCDate, @CreatedBy, @ExtProps::jsonb)
                   RETURNING id",
-                party, transaction);
+                party, 
+                transaction);
 
             var person = userMapper.MapPersonFrom(command);
             person.PartyPk = partyPk;
@@ -73,7 +81,8 @@ public class UserRepository(
                           personal_title, suffix, gender, birth_date, comments)
                   VALUES (@PartyPk, @Salutation, @FirstName, @MiddleName, @LastName, @Nickname,
                           @PersonalTitle, @Suffix, @Gender, @BirthDate, @Comments)",
-                person, transaction);
+                person, 
+                transaction);
 
             var login = userMapper.MapUserLoginFrom(command, userLoginId, passwordHash);
             login.PartyPk = partyPk;
@@ -87,7 +96,8 @@ public class UserRepository(
                           @RequirePasswordChange, @DisabledUTCDate, @LastLocale, @LastTimeZone,
                           @ExternalAuthId, @CreatedUTCDate, @CreatedBy)
                   RETURNING id",
-                login, transaction);
+                login, 
+                transaction);
 
             var roles = await ReplaceRolesAsync(conn, transaction, partyPk, command.RoleCodes ?? []);
             if (!roles) return new OkOrError<string>(false, Error: roles.Error);
@@ -366,17 +376,23 @@ public class UserRepository(
     /// <summary>
     /// Replaces the roles of a party with the given role codes. Fails on unknown codes.
     /// </summary>
-    private static async Task<OkOrError<int>> ReplaceRolesAsync(IDbConnection conn, IDbTransaction tx, int partyPk, IReadOnlyCollection<string> roleCodes)
+    private async Task<OkOrError<int>> ReplaceRolesAsync(IDbConnection conn, 
+        IDbTransaction tx, 
+        int partyPk, 
+        IReadOnlyCollection<string> roleCodes)
     {
         var codes = roleCodes.Select(c => c.Trim().ToUpperInvariant()).Distinct().ToArray();
 
-        await conn.ExecuteAsync("DELETE FROM party_roles WHERE party_pk = @PartyPk", new { PartyPk = partyPk }, tx);
+        await conn.ExecuteAsync("DELETE FROM party_roles WHERE party_pk = @PartyPk", 
+            new { PartyPk = partyPk }, 
+            tx);
 
         if (codes.Length == 0) return 0;
 
         var inserted = await conn.ExecuteAsync(
-            "INSERT INTO party_roles (party_pk, role_type_pk) SELECT @PartyPk, id FROM role_types WHERE code IN @Codes",
-            new { PartyPk = partyPk, Codes = codes }, tx);
+            $"INSERT INTO party_roles (party_pk, role_type_pk) SELECT @PartyPk, id FROM role_types WHERE code IN {ComposeArrayParameter(codes)}",
+            new { PartyPk = partyPk }, 
+            tx);
 
         if (inserted != codes.Length)
             return new OkOrError<int>(false, Error: "One or more role codes are unknown.");
@@ -388,7 +404,11 @@ public class UserRepository(
     /// Replaces the active security groups of a login. Groups must be built-in or belong to the tenant.
     /// Removed assignments are closed with thru_date, as in OFBiz.
     /// </summary>
-    private static async Task<OkOrError<int>> ReplaceSecurityGroupsAsync(IDbConnection conn, IDbTransaction tx, int userLoginPk, int tenantPk, IReadOnlyCollection<Guid> securityGroupIds)
+    private async Task<OkOrError<int>> ReplaceSecurityGroupsAsync(IDbConnection conn, 
+        IDbTransaction tx, 
+        int userLoginPk, 
+        int tenantPk, 
+        IReadOnlyCollection<Guid> securityGroupIds)
     {
         var ids = securityGroupIds.Distinct().ToArray();
 

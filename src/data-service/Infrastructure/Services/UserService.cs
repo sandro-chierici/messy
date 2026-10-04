@@ -61,7 +61,7 @@ public class UserService(
         var passwordHash = passwordHasher.HashPassword(null!, password.Value!);
 
         var res = await userRepository.CreateUserAsync(
-            tenantGuid.Value, newUserId, newUserLoginId, command, groupIds.Value!, passwordHash);
+            tenantGuid, newUserId, newUserLoginId, command, groupIds.Value!, passwordHash);
 
         EventBase ev = res.Ok
             ? new CreatedEvent

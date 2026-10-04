@@ -13,7 +13,7 @@ public partial class InputValidator()
     private const string SAFE_INPUT = @"\b(SELECT|FROM|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|EXEC|UNION|GRANT|REVOKE)\b";
 
     public const int MinPasswordLength = 8;
-    public const int MaxPasswordLength = 128;
+    public const int MaxPasswordLength = 256;
 
     [GeneratedRegex(@"^[A-Za-z0-9._@\-]{3,100}$")]
     private static partial Regex UsernameRegex();
