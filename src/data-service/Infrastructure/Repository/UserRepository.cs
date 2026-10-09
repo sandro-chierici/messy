@@ -5,6 +5,7 @@ using DataService.Domain.Mapper.User;
 using DataService.Domain.Repository;
 using DataService.Domain.Repository.Models;
 using DataService.Domain.Rules;
+using DataService.Domain.Services.Events;
 using Npgsql;
 using System.Data;
 
@@ -12,6 +13,7 @@ namespace DataService.Infrastructure.Repository;
 
 public class UserRepository(
     IDbConnectionFactory dbConnectionFactory,
+    IOutboxWriter outboxWriter,
     UserMapper userMapper
     ) : BaseRepository, IUserRepository
 {
@@ -40,7 +42,8 @@ public class UserRepository(
         Guid userLoginId, 
         UserCreateDTO command,
         IReadOnlyCollection<Guid> securityGroupIds, 
-        string passwordHash)
+        string passwordHash,
+        EventBase? successEvent = null)
     {
         try
         {
@@ -104,6 +107,10 @@ public class UserRepository(
 
             var groups = await ReplaceSecurityGroupsAsync(conn, transaction, loginPk, tenantPk.Value, securityGroupIds);
             if (!groups) return new OkOrError<string>(false, Error: groups.Error);
+
+            // the event is committed together with the user, or not at all
+            if (successEvent != null)
+                await outboxWriter.AddAsync(conn, transaction, successEvent);
 
             transaction.Commit();
             return partyId.ToString();
@@ -356,7 +363,7 @@ public class UserRepository(
                   FROM party_roles pr
                        JOIN parties p     ON p.id = pr.party_pk
                        JOIN role_types rt ON rt.id = pr.role_type_pk
-                  WHERE p.party_id IN @Ids
+                  WHERE p.party_id = ANY(@Ids)
                   ORDER BY rt.code",
                 new { Ids = partyIds }, tx);
 
@@ -369,7 +376,7 @@ public class UserRepository(
                        JOIN user_logins ul     ON ul.id = ulsg.user_login_pk
                        JOIN parties p          ON p.id = ul.party_pk
                        JOIN security_groups sg ON sg.id = ulsg.security_group_pk
-                  WHERE p.party_id IN @Ids AND (ulsg.thru_date IS NULL OR ulsg.thru_date > now())
+                  WHERE p.party_id = ANY(@Ids) AND (ulsg.thru_date IS NULL OR ulsg.thru_date > now())
                   ORDER BY sg.name",
                 new { Ids = partyIds }, tx);
 
@@ -390,8 +397,8 @@ public class UserRepository(
         if (codes.Length == 0) return 0;
 
         var inserted = await conn.ExecuteAsync(
-            $"INSERT INTO party_roles (party_pk, role_type_pk) SELECT @PartyPk, id FROM role_types WHERE code IN {ComposeArrayParameter(codes)}",
-            new { PartyPk = partyPk }, 
+            "INSERT INTO party_roles (party_pk, role_type_pk) SELECT @PartyPk, id FROM role_types WHERE code = ANY(@Codes)",
+            new { PartyPk = partyPk, Codes = codes },
             tx);
 
         if (inserted != codes.Length)
@@ -416,7 +423,7 @@ public class UserRepository(
             ? []
             : (await conn.QueryAsync<int>(
                 @"SELECT id FROM security_groups
-                  WHERE security_group_id IN @Ids AND (tenant_pk IS NULL OR tenant_pk = @TenantPk)",
+                  WHERE security_group_id = ANY(@Ids) AND (tenant_pk IS NULL OR tenant_pk = @TenantPk)",
                 new { Ids = ids, TenantPk = tenantPk }, tx)).ToArray();
 
         if (groupPks.Length != ids.Length)
@@ -434,13 +441,13 @@ public class UserRepository(
         await conn.ExecuteAsync(
             @"UPDATE user_login_security_groups SET thru_date = now()
               WHERE user_login_pk = @UserLoginPk AND (thru_date IS NULL OR thru_date > now())
-                AND security_group_pk NOT IN @GroupPks",
+                AND security_group_pk <> ALL(@GroupPks)",
             new { UserLoginPk = userLoginPk, GroupPks = groupPks }, tx);
 
         await conn.ExecuteAsync(
             @"INSERT INTO user_login_security_groups (user_login_pk, security_group_pk, from_date)
               SELECT @UserLoginPk, g.id, now() FROM security_groups g
-              WHERE g.id IN @GroupPks
+              WHERE g.id = ANY(@GroupPks)
                 AND NOT EXISTS (SELECT 1 FROM user_login_security_groups x
                                 WHERE x.user_login_pk = @UserLoginPk AND x.security_group_pk = g.id
                                   AND (x.thru_date IS NULL OR x.thru_date > now()))",

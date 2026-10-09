@@ -5,16 +5,18 @@ using DataService.Domain.Mapper.Tenant;
 using DataService.Domain.Repository;
 using DataService.Domain.Repository.Models;
 using DataService.Domain.Rules;
+using DataService.Domain.Services.Events;
 
 namespace DataService.Infrastructure.Repository;
 
 public class TenantRepository(
     IDbConnectionFactory dbConnectionFactory,
+    IOutboxWriter outboxWriter,
     TenantMapper tenantMapper   
-    ) : ITenantRepository
+    ) : BaseRepository, ITenantRepository
 {
 
-    public async Task<OkOrError<string>> CreateTenantAsync(Guid tenantId, TenantCreateDTO command)
+    public async Task<OkOrError<string>> CreateTenantAsync(Guid tenantId, TenantCreateDTO command, EventBase? successEvent = null)
     {
         try
         {
@@ -35,6 +37,10 @@ public class TenantRepository(
                               @UpdatedUTCDate, @CreatedBy, @ExtProps::jsonb)",
                 model,
                 transaction);
+
+            // the event is committed together with the tenant, or not at all
+            if (successEvent != null)
+                await outboxWriter.AddAsync(conn, transaction, successEvent);
 
             transaction.Commit();
 

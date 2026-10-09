@@ -11,7 +11,7 @@ namespace DataService.Infrastructure.Repository;
 public class ReferenceDataRepository(
     IDbConnectionFactory dbConnectionFactory,
     SecurityGroupMapper securityGroupMapper
-    ) : IReferenceDataRepository
+    ) : BaseRepository, IReferenceDataRepository
 {
     public async Task<OkOrError<List<RoleTypeViewDTO>>> GetRoleTypesAsync()
     {

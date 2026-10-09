@@ -30,18 +30,21 @@ public class SecurityGroupService(
         // create a brand new Id
         var newSecurityGroupId = swissKnife.GenerateGuid();
 
-        var res = await securityGroupRepository.CreateSecurityGroupAsync(tenantGuid.Value, newSecurityGroupId, command);
+        // the repository stores this event in the outbox, in the same transaction as the group
+        var createdEvent = new CreatedEvent
+        {
+            Id = swissKnife.GenerateGuid(),
+            Producer = "SecurityGroupService.CreateSecurityGroupAsync",
+            ResourceName = "SecurityGroup",
+            ResourceId = newSecurityGroupId.ToString(),
+            ResourceType = "SecurityGroup"
+        };
 
-        EventBase ev = res.Ok
-            ? new CreatedEvent
-            {
-                Id = swissKnife.GenerateGuid(),
-                Producer = "SecurityGroupService.CreateSecurityGroupAsync",
-                ResourceName = "SecurityGroup",
-                ResourceId = newSecurityGroupId.ToString(),
-                ResourceType = "SecurityGroup"
-            }
-            : new FailureEvent
+        var res = await securityGroupRepository.CreateSecurityGroupAsync(tenantGuid.Value, newSecurityGroupId, command, createdEvent);
+
+        // nothing was committed: the failure is published on its own
+        if (!res.Ok)
+            await eventPublisher.PublishEventAsync(new FailureEvent
             {
                 Id = swissKnife.GenerateGuid(),
                 Producer = "SecurityGroupService.CreateSecurityGroupAsync",
@@ -49,9 +52,7 @@ public class SecurityGroupService(
                 ResourceId = newSecurityGroupId.ToString(),
                 ResourceType = "SecurityGroup",
                 ErrorMessage = res.Error ?? "Unknown error creating security group"
-            };
-
-        await eventPublisher.PublishEventAsync(ev);
+            });
 
         return res;
     }

@@ -1,15 +1,10 @@
-﻿namespace DataService.Infrastructure.Repository;
+namespace DataService.Infrastructure.Repository;
 
+/// <summary>
+/// Base class of all repositories.
+/// Array parameters are passed natively (string[], Guid[], int[]) and matched with
+/// <c>= ANY(@Param)</c> / <c>&lt;&gt; ALL(@Param)</c>; never use <c>IN @Param</c> with Npgsql.
+/// </summary>
 public abstract class BaseRepository
 {
-    protected string ComposeArrayParameter<T>(IReadOnlyCollection<T> values)
-        => values switch
-        {
-            IReadOnlyCollection<Guid> guidValues when guidValues.Count > 0 => $"({string.Join(",", guidValues.Select(v => $"'{v}'"))})::uuid[]",
-            IReadOnlyCollection<Guid> guidValues when guidValues.Count == 0 => $"()::uuid[]",
-            IReadOnlyCollection<string> stringValues => $"({string.Join(",", stringValues.Select(v => $"'{v}'"))})",
-            IReadOnlyCollection<int> intValues => $"({string.Join(",", intValues)})",
-            _ => throw new ArgumentException($"Unsupported type {typeof(T)} for array parameter composition.")
-        };
 }
-

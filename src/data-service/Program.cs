@@ -28,6 +28,7 @@ if (builder.Environment.IsDevelopment())
 
 // Add My Services
 builder.Services.AddApplicationServices();
+builder.Services.AddEventing(builder.Configuration);
 
 var app = builder.Build();
 

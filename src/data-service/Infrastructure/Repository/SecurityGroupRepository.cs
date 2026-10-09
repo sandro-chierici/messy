@@ -5,6 +5,7 @@ using DataService.Domain.Mapper.Security;
 using DataService.Domain.Repository;
 using DataService.Domain.Repository.Models;
 using DataService.Domain.Rules;
+using DataService.Domain.Services.Events;
 using Npgsql;
 using System.Data;
 
@@ -12,8 +13,9 @@ namespace DataService.Infrastructure.Repository;
 
 public class SecurityGroupRepository(
     IDbConnectionFactory dbConnectionFactory,
+    IOutboxWriter outboxWriter,
     SecurityGroupMapper securityGroupMapper
-    ) : ISecurityGroupRepository
+    ) : BaseRepository, ISecurityGroupRepository
 {
     private sealed record PermissionRow(Guid SecurityGroupId, string Code);
 
@@ -22,7 +24,7 @@ public class SecurityGroupRepository(
           FROM security_groups sg
                LEFT JOIN tenants t ON t.id = sg.tenant_pk ";
 
-    public async Task<OkOrError<string>> CreateSecurityGroupAsync(Guid tenantId, Guid securityGroupId, SecurityGroupCreateDTO command)
+    public async Task<OkOrError<string>> CreateSecurityGroupAsync(Guid tenantId, Guid securityGroupId, SecurityGroupCreateDTO command, EventBase? successEvent = null)
     {
         try
         {
@@ -44,12 +46,16 @@ public class SecurityGroupRepository(
             {
                 var inserted = await conn.ExecuteAsync(
                     @"INSERT INTO security_group_permissions (security_group_pk, security_permission_pk)
-                      SELECT @GroupPk, id FROM security_permissions WHERE code IN @Codes",
+                      SELECT @GroupPk, id FROM security_permissions WHERE code = ANY(@Codes)",
                     new { GroupPk = groupPk.Value, Codes = codes }, transaction);
 
                 if (inserted != codes.Length)
                     return new OkOrError<string>(false, Error: "One or more permission codes are unknown.");
             }
+
+            // the event is committed together with the group, or not at all
+            if (successEvent != null)
+                await outboxWriter.AddAsync(conn, transaction, successEvent);
 
             transaction.Commit();
             return securityGroupId.ToString();
@@ -123,7 +129,7 @@ public class SecurityGroupRepository(
                   FROM security_group_permissions sgp
                        JOIN security_groups sg      ON sg.id = sgp.security_group_pk
                        JOIN security_permissions sp ON sp.id = sgp.security_permission_pk
-                  WHERE sg.security_group_id IN @Ids
+                  WHERE sg.security_group_id = ANY(@Ids)
                   ORDER BY sp.code",
                 new { Ids = groupIds });
 }

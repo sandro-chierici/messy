@@ -2,7 +2,7 @@
 
 public abstract class EventBase
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public string? Producer { get; set; }
     public string EventType => GetType().Name;

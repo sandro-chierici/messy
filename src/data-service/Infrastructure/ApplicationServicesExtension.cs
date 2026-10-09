@@ -46,10 +46,7 @@ public static class ApplicationServicesExtension
         @this.AddScoped<ISecurityGroupService, SecurityGroupService>();
         @this.AddScoped<IReferenceDataService, ReferenceDataService>();
 
-        // add pulbisher and consumers for events
-        @this.AddSingleton<IEventPublisher, EventBrokerAdapter>();
-        @this.AddSingleton<IEventConsumer, EventBrokerAdapter>();
-
+        // events: see AddEventing (outbox + broker), needs the configuration
         return @this;
     }
 

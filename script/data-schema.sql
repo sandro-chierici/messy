@@ -186,3 +186,23 @@ CREATE TABLE user_login_security_groups (
 );
 
 CREATE INDEX idx_ulsg_security_group_pk ON user_login_security_groups (security_group_pk);
+
+
+-- Infrastructure (not an OFBiz entity): transactional outbox.
+-- Rows are written in the same transaction as the business change and relayed to the broker (NATS JetStream).
+-- bigint PK: high-volume table. event_id is the V7 GUID of the event and doubles as the broker dedupe id.
+CREATE TABLE event_outbox (
+    id                BIGSERIAL       PRIMARY KEY,
+    event_id          UUID            NOT NULL UNIQUE,
+    subject           VARCHAR(255)    NOT NULL,
+    event_type        VARCHAR(100)    NOT NULL,
+    payload           JSONB           NOT NULL,
+    created_utc_date  TIMESTAMP       NOT NULL,
+    sent_utc_date     TIMESTAMP,
+    attempts          INTEGER         NOT NULL DEFAULT 0,
+    last_error        VARCHAR(1000),
+    dead_utc_date     TIMESTAMP
+);
+
+CREATE INDEX idx_event_outbox_pending ON event_outbox (id) WHERE sent_utc_date IS NULL AND dead_utc_date IS NULL;
+CREATE INDEX idx_event_outbox_sent    ON event_outbox (sent_utc_date) WHERE sent_utc_date IS NOT NULL;

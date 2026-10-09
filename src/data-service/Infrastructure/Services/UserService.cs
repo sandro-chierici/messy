@@ -60,19 +60,22 @@ public class UserService(
         var newUserLoginId = swissKnife.GenerateGuid();
         var passwordHash = passwordHasher.HashPassword(null!, password.Value!);
 
-        var res = await userRepository.CreateUserAsync(
-            tenantGuid, newUserId, newUserLoginId, command, groupIds.Value!, passwordHash);
+        // the repository stores this event in the outbox, in the same transaction as the user
+        var createdEvent = new CreatedEvent
+        {
+            Id = swissKnife.GenerateGuid(),
+            Producer = "UserService.CreateUserAsync",
+            ResourceName = "User",
+            ResourceId = newUserId.ToString(),
+            ResourceType = "User"
+        };
 
-        EventBase ev = res.Ok
-            ? new CreatedEvent
-            {
-                Id = swissKnife.GenerateGuid(),
-                Producer = "UserService.CreateUserAsync",
-                ResourceName = "User",
-                ResourceId = newUserId.ToString(),
-                ResourceType = "User"
-            }
-            : new FailureEvent
+        var res = await userRepository.CreateUserAsync(
+            tenantGuid, newUserId, newUserLoginId, command, groupIds.Value!, passwordHash, createdEvent);
+
+        // nothing was committed: the failure is published on its own
+        if (!res.Ok)
+            await eventPublisher.PublishEventAsync(new FailureEvent
             {
                 Id = swissKnife.GenerateGuid(),
                 Producer = "UserService.CreateUserAsync",
@@ -80,9 +83,7 @@ public class UserService(
                 ResourceId = newUserId.ToString(),
                 ResourceType = "User",
                 ErrorMessage = res.Error ?? "Unknown error creating user"
-            };
-
-        await eventPublisher.PublishEventAsync(ev);
+            });
 
         return res;
     }

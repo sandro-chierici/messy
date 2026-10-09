@@ -1,6 +1,7 @@
 using DataService.Domain.IO;
 using DataService.Domain.IO.User;
 using DataService.Domain.Rules;
+using DataService.Domain.Services.Events;
 
 namespace DataService.Domain.Repository;
 
@@ -10,7 +11,7 @@ namespace DataService.Domain.Repository;
 /// </summary>
 public interface IUserRepository : IRepository
 {
-    public Task<OkOrError<string>> CreateUserAsync(Guid tenantId, Guid partyId, Guid userLoginId, UserCreateDTO command, IReadOnlyCollection<Guid> securityGroupIds, string passwordHash);
+    public Task<OkOrError<string>> CreateUserAsync(Guid tenantId, Guid partyId, Guid userLoginId, UserCreateDTO command, IReadOnlyCollection<Guid> securityGroupIds, string passwordHash, EventBase? successEvent = null);
     public Task<OkOrError<UserViewDTO>> GetUserAsync(Guid tenantId, Guid userId);
     public Task<OkOrError<QueryResult>> ListUsersAsync(Guid tenantId, int page, int pageSize);
     public Task<OkOrError<UserViewDTO>> UpdateUserAsync(Guid tenantId, Guid userId, UserUpdateDTO command, string? passwordHash);

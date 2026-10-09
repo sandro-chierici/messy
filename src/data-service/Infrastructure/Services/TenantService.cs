@@ -26,30 +26,29 @@ public class TenantService(
         // create a brand new Id 
         var newTenantId = swissKnife.GenerateGuid();
 
-        var res = await tenantRepository.CreateTenantAsync(newTenantId, tenantCommand);
-
-        EventBase ev = res switch
+        // the repository stores this event in the outbox, in the same transaction as the tenant
+        var createdEvent = new CreatedEvent
         {
-            OkOrError<string> { Ok: true } => new CreatedEvent
-            {
-                Producer = "TenantService.CreateTenantAsync",
-                ResourceName = "Tenant",
-                ResourceId = newTenantId.ToString(),
-                ResourceType = "Tenant"
-            },
+            Id = swissKnife.GenerateGuid(),
+            Producer = "TenantService.CreateTenantAsync",
+            ResourceName = "Tenant",
+            ResourceId = newTenantId.ToString(),
+            ResourceType = "Tenant"
+        };
 
-            OkOrError<string> { Ok: false, Error: var error } => new FailureEvent
+        var res = await tenantRepository.CreateTenantAsync(newTenantId, tenantCommand, createdEvent);
+
+        // nothing was committed: the failure is published on its own
+        if (!res.Ok)
+            await eventPublisher.PublishEventAsync(new FailureEvent
             {
+                Id = swissKnife.GenerateGuid(),
                 Producer = "TenantService.CreateTenantAsync",
                 ResourceName = "Tenant",
                 ResourceId = newTenantId.ToString(),
                 ResourceType = "Tenant",
-                ErrorMessage = error ?? "Unknown error creating tenant"
-            },
-        };
-
-        // publish the event
-        await eventPublisher.PublishEventAsync(ev);
+                ErrorMessage = res.Error ?? "Unknown error creating tenant"
+            });
 
         return res;
     }
